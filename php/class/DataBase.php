@@ -70,7 +70,7 @@ class DataBase
 		{
 			$args[$i + 1] = "Unknow_placeholder_" . $i;
 		}
-		//print_r( call_user_func_array( "sprintf", $args )."\n\n" );
+		// print_r( call_user_func_array( "sprintf", $args )."\n\n" );
 		return call_user_func_array( "sprintf", $args );
 	}
 }

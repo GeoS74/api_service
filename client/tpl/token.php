@@ -82,8 +82,10 @@
         };
 
         function makeRow(data) {
-            return `<div data-id="${data.id}">Организация: ${data.organization} <br> 
-            Контакты: ${data.contacts} <br> 
+            return `<div data-id="${data.id}">
+            Организация: ${data.organization || ""} <br> 
+            ИНН: ${data.inn || ""} <br> 
+            Контакты: ${data.contacts || ""} <br> 
             Token: <b>${data.token}</b> <small onclick="delToken(event)">delete</small><br><hr></div>`;
         }
     </script>
