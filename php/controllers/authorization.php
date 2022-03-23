@@ -33,7 +33,7 @@ function checkToken($token) {
     $result = $db -> mysql_qw('SELECT token, last_visit, count_visit, inn, is_customer FROM access_tokens WHERE token=?', $token);
 
     if(!$result -> num_rows) {
-        Flight::halt(403, 'Forbidden');
+        Flight::halt(401, 'Unauthorized');
     }
     else {
         $token_data = $result -> fetch_assoc();

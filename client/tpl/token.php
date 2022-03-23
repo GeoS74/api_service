@@ -33,7 +33,7 @@
                 .then(async response => {
                     if (response.ok) {
                         const res = await response.json();
-                        console.log(res);
+                        // console.log(res);
                         for (const r of res) {
                             token.insertAdjacentHTML('afterbegin', makeRow(r));
                         }

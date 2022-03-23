@@ -1,6 +1,7 @@
 <?php
 require_once 'vendor/autoload.php';
-require_once 'php/libs/authorization.inc';
+require_once 'php/controllers/authorization.php';
+require_once 'php/controllers/orders.php';
 //https://flightphp.com/learn
 
 
@@ -31,7 +32,19 @@ Flight::route('GET /test', function () {
 //~~~~~~~~~~~~~~~~~~~~~~~main api~~~~~~~~~~~~~~~~~~~~~~~\\
 Flight::route('POST /api/service/order', function () {
     $client = accessControl();
+    if ($client['is_customer'] === 'false') {
+        Flight::halt(403, 'Forbidden');
+    }
+
+    $body = (array)json_decode(Flight::request()->getBody());
+    $body['inn_customer'] = $client['inn'];
+
+    checkCredentialsOrder($body);
+    checkDublicateOrder($body);
+    addOrder($body);
+
     print_r($client);
+    print_r($body);
 });
 Flight::route('GET /api/service/orders', function () {
     $client = accessControl();
@@ -44,8 +57,8 @@ Flight::route('GET /api/service/orders', function () {
 
 //~~~~~~~~~~~~~~~~~~~~~~~docs api~~~~~~~~~~~~~~~~~~~~~~~\\
 Flight::route('GET /api/service/docs(/@page)', function ($page) {
-    if(!$page) $page = 'main';
-    Flight::render('./docs/'.$page);
+    if (!$page) $page = 'main';
+    Flight::render('./docs/' . $page);
 });
 
 
@@ -131,19 +144,19 @@ Flight::route('GET /create/db', function () {
 Flight::route('GET /create/table/token', function () {
     try {
         $db = new DataBase();
-        $db -> mysql_qw("CREATE TABLE access_tokens (
+        $db->mysql_qw("CREATE TABLE access_tokens (
             id SMALLINT NOT NULL AUTO_INCREMENT, 
             inn VARCHAR(12),
             organization VARCHAR(255),
             contacts VARCHAR(255),
             token VARCHAR(53),
             last_visit TIMESTAMP NOT NULL DEFAULT now(),
-            count_visit INTEGER NOT NULL DEFAULT 1,
+            count_visit INTEGER NOT NULL DEFAULT 0,
             is_customer ENUM('false', 'true') NOT NULL DEFAULT 'false',
         PRIMARY KEY(id))");
 
-        $db -> mysql_qw('CREATE INDEX inn ON access_tokens(inn)');
-        $db -> mysql_qw('CREATE UNIQUE INDEX token ON access_tokens(token)');
+        $db->mysql_qw('CREATE INDEX inn ON access_tokens(inn)');
+        $db->mysql_qw('CREATE UNIQUE INDEX token ON access_tokens(token)');
 
         echo 'table for tokens created';
     } catch (Exception $error) {
@@ -157,27 +170,29 @@ Flight::route('GET /create/table/orders', function () {
         $db->mysql_qw("CREATE TABLE orders (
             id SMALLINT NOT NULL AUTO_INCREMENT,
             date_create TIMESTAMP NOT NULL DEFAULT now(),
+            inn_customer VARCHAR(12) NOT NULL,
             accept_start_repair ENUM('false', 'true') NOT NULL DEFAULT 'false',
             date_start_repair TIMESTAMP NOT NULL DEFAULT now(),
 
-            uid_order VARCHAR(50) NOT NULL,
-            inn_customer VARCHAR(12) NOT NULL,
+            uid VARCHAR(50) NOT NULL,
             order_num VARCHAR(100),
             garage_num VARCHAR(25),
             invent_num VARCHAR(25),
-            car_type VARCHAR(255),
-            car VARCHAR(255),
+            reg_num VARCHAR(25),
             vin_code VARCHAR(17),
+            car_model VARCHAR(255),
+             
+            car_type VARCHAR(255),
             year_issue VARCHAR(4),
             mileage VARCHAR(10),
-            reg_num VARCHAR(25),
             problems TEXT,
             contact VARCHAR(255),
             basis VARCHAR(255),
             comments VARCHAR(255),
         PRIMARY KEY(id))");
 
-        $db -> mysql_qw('CREATE INDEX inn_customer ON orders(inn_customer)');
+        $db->mysql_qw('CREATE INDEX inn_customer ON orders(inn_customer)');
+        $db->mysql_qw('CREATE INDEX uid ON orders(uid)');
 
         echo 'table for orders created';
     } catch (Exception $error) {
@@ -191,4 +206,3 @@ Flight::map('notFound', function () {
 });
 
 Flight::start();
-?>

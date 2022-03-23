@@ -78,40 +78,95 @@
 
 
 
+    // $data = [
+    // "sfs4ff334f3fgjfJU&7jtjt7jtjt3t3",
+    // "741259687451",
+    // "100500/сгк",
+    // "115127",
+    // "11451",
+    // "Бортовой автомобиль с КМУ",
+    // "Урал 4320 с БАКМ",
+    // "sdfs4w4wcwfwfwvf3",
+    // "2001",
+    // "18 095",
+    // "C158ОВ165RUS",
+    // serialize($problems),
+    // "Сидоров Павел Александрович",
+    // "г. Новый Уренгой",
+    // "УКПГ-16",
+    // ];
 
 
+    // uid,
+    // order_num,
+    // garage_num,
+    // invent_num,
+    // reg_num,
+    // vin_code,
+    // car_model,
+
+    // car_type,
+    // year_issue,
+    // mileage,
+    // problems,
+    // contact,
+    // basis,
+    // comment
+
+    // inn_customer,
 
 
-<script>
-    const data = {
-        name: 'GeoS',
-        // value: [1, 3, 5]
-    };
+    <script>
+        const data = {
+            uid: 'dgfvi49y84um9395',
+            order_num: 'C2KA-039837',
+            garage_num: '115853',
+            invent_num: '11527',
+            reg_num: 'O931BK199',
+            vin_code: 'X980980N3AABS5078',
+            car_model: 'УРАЛ 4320 с БАКМ 0980N',
 
-    (async _ => {
-        await fetch('/gsp/api/service/orders', {
-                // mode: 'cors',
-                // cache: 'no-cache',
-                headers: {
-                    // 'Content-Type': 'multipart/form-data',
-                    // 'Content-Type': 'application/x-www-form-urlencoded',
-                    // 'Content-Type': 'application/json',
-                    // 'Connection': 'keep-alive',
-                    // 'Origin': 'weed.ru'
-                    'Authorization': 'Basic 1132f97ab8ed7fe7a8aeea34e90d6d8cf250ebe508fd42cd3e'
-                },
-                method: 'GET',
-                // body: JSON.stringify(data)
-            })
-            .then(async response => {
-                console.log('response');
-                console.log(response.status);
-                console.log(await response.text());
-                // console.log(await response.json());
-            })
-            .catch(async error => {
-                console.log('error');
-                console.log(error);
-            })
-    })();
-</script>
+            car_type: 'Бортовой автомобиль с КМУ',
+            year_issue: '2008',
+            mileage: '21 968',
+            problems: [
+                "плановое ТО",    
+                "нестабильные обороты на холостых",   
+            ],
+            contact: 'Иванов Иван Иванович',
+            basis: 'г. Новый Уренгой',
+            comments: 'Здесь может быть какой-нибудь комментарий',
+        };
+
+        (async _ => {
+            await fetch('/gsp/api/service/order', {
+                    // mode: 'cors',
+                    // cache: 'no-cache',
+                    headers: {
+                        // 'Content-Type': 'multipart/form-data',
+                        // 'Content-Type': 'application/x-www-form-urlencoded',
+                        'Content-Type': 'application/json',
+                        // 'Connection': 'keep-alive',
+                        // 'Origin': 'weed.ru'
+                        'Authorization': 'Basic c18425c8bcc80255d2b8a55609f4e7701c301aeacdf7f4527a'
+                    },
+                    method: 'POST',
+                    body: JSON.stringify(data)
+                })
+                .then(async response => {
+                    if(response.ok){
+                        console.log(await response.text());
+                    }
+                    else if(response.status == 400) {
+                        console.log(JSON.parse(await response.text()));
+                    }
+                    else {
+                        console.log(await response.text());
+                    }
+                })
+                .catch(async error => {
+                    console.log('error');
+                    console.log(error);
+                })
+        })();
+    </script>
