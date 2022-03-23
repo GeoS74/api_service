@@ -10,9 +10,14 @@ ini_set('session.use_strict_mode', true);
 ini_set('session.cookie_httponly', true);
 ini_set('session.use_trans_sid', false);
 
-date_default_timezone_set('UTC'); //Устанавливает временную зону по умолчанию для всех функций даты/времени в скрипте
+date_default_timezone_set('Europe/Moscow'); //Устанавливает временную зону по умолчанию для всех функций даты/времени в скрипте
+//часовой пояс для БД устанавливается в скрипте 
+//$mysqli->query("SET GLOBAL time_zone = '+3:00'")
 
 //charset
 ini_set('default_charset', CHARSET);
 mb_internal_encoding( CHARSET );
+
+//token
+define('MAX_LIMIT_REQUESTS', 20000);
 ?>

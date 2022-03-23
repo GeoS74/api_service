@@ -30,10 +30,13 @@ Flight::route('GET /test', function () {
 
 //~~~~~~~~~~~~~~~~~~~~~~~main api~~~~~~~~~~~~~~~~~~~~~~~\\
 Flight::route('POST /api/service/order', function () {
-    accessControl();
-    echo '/api/service/order';
+    $client = accessControl();
+    print_r($client);
 });
-
+Flight::route('GET /api/service/orders', function () {
+    $client = accessControl();
+    print_r($client);
+});
 
 
 
@@ -80,18 +83,20 @@ Flight::route('POST /token', function () {
     try {
         $db = new DataBase();
         $db->mysql_qw(
-            "INSERT INTO access_tokens (inn, organization, contacts, token) VALUES(?, ?, ?, ?)",
+            "INSERT INTO access_tokens (inn, organization, contacts, token, is_customer) VALUES(?, ?, ?, ?, ?)",
             Flight::request()->data->inn,
             Flight::request()->data->organization,
             Flight::request()->data->contacts,
-            $token
+            $token,
+            Flight::request()->data->is_customer ? 'true' : 'false',
         );
         echo json_encode([
             "id" => $db->get_last_id(),
             "inn" => Flight::request()->data->inn,
             "organization" => Flight::request()->data->organization,
             "contacts" => Flight::request()->data->contacts,
-            "token" => $token
+            "token" => $token,
+            "is_customer" => Flight::request()->data->is_customer ? 'true' : 'false'
         ]);
     } catch (Exception $error) {
         Flight::halt(400, json_encode(["error" => $error->getMessage()]));
@@ -116,6 +121,7 @@ Flight::route('GET /create/db', function () {
         $mysqli = new mysqli(DB_HOST, DB_USER, DB_PASS, "");
         $mysqli->set_charset(DB_CHARSET);
         $mysqli->query("CREATE DATABASE " . DB_NAME);
+        $mysqli->query("SET GLOBAL time_zone = '+3:00'");
         echo 'database created';
     } catch (Exception $error) {
         Flight::halt(400, json_encode(["error" => $error->getMessage()]));
@@ -125,13 +131,20 @@ Flight::route('GET /create/db', function () {
 Flight::route('GET /create/table/token', function () {
     try {
         $db = new DataBase();
-        $db->mysql_qw("CREATE TABLE access_tokens (
+        $db -> mysql_qw("CREATE TABLE access_tokens (
             id SMALLINT NOT NULL AUTO_INCREMENT, 
             inn VARCHAR(12),
             organization VARCHAR(255),
             contacts VARCHAR(255),
-            token VARCHAR(50),
+            token VARCHAR(53),
+            last_visit TIMESTAMP NOT NULL DEFAULT now(),
+            count_visit INTEGER NOT NULL DEFAULT 1,
+            is_customer ENUM('false', 'true') NOT NULL DEFAULT 'false',
         PRIMARY KEY(id))");
+
+        $db -> mysql_qw('CREATE INDEX inn ON access_tokens(inn)');
+        $db -> mysql_qw('CREATE UNIQUE INDEX token ON access_tokens(token)');
+
         echo 'table for tokens created';
     } catch (Exception $error) {
         Flight::halt(400, json_encode(["error" => $error->getMessage()]));
@@ -163,6 +176,9 @@ Flight::route('GET /create/table/orders', function () {
             basis VARCHAR(255),
             comments VARCHAR(255),
         PRIMARY KEY(id))");
+
+        $db -> mysql_qw('CREATE INDEX inn_customer ON orders(inn_customer)');
+
         echo 'table for orders created';
     } catch (Exception $error) {
         Flight::halt(400, json_encode(["error" => $error->getMessage()]));
@@ -171,7 +187,7 @@ Flight::route('GET /create/table/orders', function () {
 
 
 Flight::map('notFound', function () {
-    Flight::halt(404, json_encode(["error" => 'not found']));
+    Flight::halt(404, 'not found');
 });
 
 Flight::start();

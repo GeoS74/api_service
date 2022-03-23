@@ -14,12 +14,14 @@
 </head>
 <body>
     <h1>Add token</h1>
-    <form id="tokenForm" onclick="event.preventDefault()" enctype="multipart/form-data">
+    <form id="tokenForm" onsubmit="event.preventDefault()" enctype="multipart/form-data">
         inn: <input type="text" name="inn" />
         <br><br>
         organization: <input type="text" name="organization" />
         <br><br>
         contacts: <input type="text" name="contacts" />
+        <br><br>
+        is customer: <input type="checkbox" name="is_customer" />
         <br><br>
         <input type="submit" id="addToken" value="create token" />
     </form>
@@ -31,14 +33,16 @@
                 .then(async response => {
                     if (response.ok) {
                         const res = await response.json();
-                        // console.log(res);
+                        console.log(res);
                         for (const r of res) {
                             token.insertAdjacentHTML('afterbegin', makeRow(r));
                         }
                     } else {
-                        throw (new Error(`http response status ${response.status}`))
+                        const res = await response.json();
+                        throw (new Error(`${res.error}`))
                     }
-                });
+                })
+                .catch(error => console.log(error));;
         })();
 
         function delToken(event) {
@@ -86,6 +90,7 @@
             Организация: ${data.organization || ""} <br> 
             ИНН: ${data.inn || ""} <br> 
             Контакты: ${data.contacts || ""} <br> 
+            Заказчик: ${data.is_customer === 'true' ? "да" : "нет"} <br> 
             Token: <b>${data.token}</b> <small onclick="delToken(event)">delete</small><br><hr></div>`;
         }
     </script>
