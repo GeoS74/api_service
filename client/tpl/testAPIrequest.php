@@ -145,9 +145,13 @@
             // comments: 'Здесь может быть какой-нибудь комментарий',
         };
 
+        const upd = {
+            accept_start_repair: 'true'
+        };
         (async _ => {
             // await fetch('/gsp/api/service/orders', {
             // await fetch('/gsp/api/service/order/dgfvi49y84um19395', {
+            // await fetch('/gsp/api/service/order/7810443290_10', {
             await fetch('/gsp/api/service/order/7810443290_10', {
                     // mode: 'cors',
                     // cache: 'no-cache',
@@ -159,8 +163,9 @@
                         // 'Origin': 'weed.ru'
                         'Authorization': 'Basic 640aec714b14bb856621c593ca8cd88a873763e06dc655dfa2'
                     },
-                    method: 'GET',
+                    method: 'POST',
                     // body: JSON.stringify(data)
+                    body: JSON.stringify(upd)
                 })
                 .then(async response => {
                     if(response.ok){

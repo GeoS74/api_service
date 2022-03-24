@@ -8,7 +8,7 @@ function checkDefaultKeyString($key, $data, &$errors)
     if (!is_string($data[$key])) {
         return;     
     }
-    if (!mb_strlen($data[$key])) {
+    if (!mb_strlen( trim($data[$key]) )) {
         return $errors[] = sprintf("поле %s обязательно для заполнения", $key);     
     }
 }

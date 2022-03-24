@@ -53,13 +53,33 @@ Flight::route('GET /api/service/orders', function () {
     getOrders($client);
     print_r($client);
 });
+//получить список не подтвержденных заявок на ремонт
+Flight::route('GET /api/service/orders/new', function () {
+    $client = accessControl();
+    getOrdersNew($client);
+    print_r($client);
+});
 //получить заявку по uid
 Flight::route('GET /api/service/order/@uid', function ($uid) {
     $client = accessControl();
     getOrder($client, $uid);
-    print_r($uid);
+    print_r($client);
 });
+//подтверждение начала ремонта
+Flight::route('POST /api/service/order/@uid', function ($uid) {
+    $client = accessControl();
+    if ($client['is_customer'] === 'true') {
+        Flight::halt(403, 'Forbidden');
+    }
 
+    
+    $body = (array)json_decode(Flight::request()->getBody());
+
+    updStartRepair($body, $uid);
+
+    print_r($client);
+    print_r($body);
+});
 
 
 

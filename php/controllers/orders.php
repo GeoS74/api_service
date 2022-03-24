@@ -1,5 +1,6 @@
 <?php
 require_once(__DIR__ . '/../libs/checkCredentials.php');
+require_once(__DIR__ . '/../libs/dataHandlers.php');
 
 function checkCredentialsOrder($data)
 {
@@ -44,9 +45,11 @@ function checkDublicateOrder($data)
         Flight::halt(400, json_encode(["errors" => $errors]));
     }
 }
-
+//направление заявки на ремонт
 function addOrder($data)
 {
+    trimer($data);
+
     //обязательные поля
     $column_name = [
         'uid',
@@ -116,6 +119,36 @@ function addOrder($data)
     }
 }
 
+
+//подтверждение начала ремонта
+function updStartRepair($data, $uid)
+{
+    trimer($data);
+
+    $errors = [];
+    checkDefaultKeyString('accept_start_repair', $data, $errors);
+    checkTypeValue('accept_start_repair', $data, 'string', $errors);
+
+    if (count($errors)) {
+        Flight::halt(400, json_encode(["errors" => $errors]));
+    }
+    
+    $uid = explode('_', $uid);
+    if (count($uid) < 2) Flight::halt(404, 'not found');
+    else $uid = $uid[1];
+
+    $query = sprintf("UPDATE orders SET date_start_repair=DEFAULT, accept_start_repair=? WHERE id=?");
+
+    try {
+        $db = new DataBase();
+        $db->mysql_qw($query, $data['accept_start_repair'], $uid);
+        Flight::halt(200, 'start repair is accepted');
+    } catch (Exception $error) {
+        sqlErrorHandler($error->getMessage());
+    }
+}
+
+
 function sqlErrorHandler($message)
 {
     $errors = [];
@@ -125,9 +158,16 @@ function sqlErrorHandler($message)
         $errors[] = sprintf("длина поля '%s' превышает допустимый размер", $match[1]);
     }
 
+    preg_match("/Data truncated for column '([\w]+)'/", $message, $match);
+    if (count($match) == 2) {
+        $errors[] = sprintf("поле '%s' содержит не допустимое значение", $match[1]);
+    }
+
+    if(!count($errors)) $errors[] = $message;
+
     Flight::halt(400, json_encode(["errors" => $errors]));
 }
-
+//получить список заявок на ремонт
 function getOrders($client)
 {
     $column_name = [
@@ -166,7 +206,7 @@ function getOrders($client)
         if ($data->num_rows) {
             while ($row = $data->fetch_assoc()) {
                 $row['problems'] = unserialize($row['problems']);
-                if(!is_array($row['problems'])) $row['problems'] = [];
+                if (!is_array($row['problems'])) $row['problems'] = [];
 
                 $result[] = $row;
             }
@@ -174,12 +214,13 @@ function getOrders($client)
         print_r($result);
         // Flight::halt(200, json_encode($result));
     } catch (Exception $error) {
-        Flight::halt(400, json_encode(["errors" => [$error->getMessage()]]));
+        sqlErrorHandler($error->getMessage());
     }
 }
 
 
-function getOrder($client, $uid)
+//получить список не подтвержденных заявок на ремонт
+function getOrdersNew($client)
 {
     $column_name = [
         'date_create',
@@ -204,9 +245,66 @@ function getOrder($client, $uid)
     ];
 
     if ($client['is_customer'] === 'true') {
+        $query = sprintf("SELECT uid, IF(accept_start_repair='true', date_start_repair, '') AS date_start_repair, %s FROM orders WHERE inn_customer=? ORDER BY id DESC", implode(', ', $column_name));
+    } else {
+        $query = sprintf("SELECT CONCAT(inn_customer, '_', id) AS uid, IF(accept_start_repair='true', date_start_repair, '') AS date_start_repair, %s FROM orders ORDER BY id DESC", implode(', ', $column_name));
+    }
+
+    try {
+        $db = new DataBase();
+        $data = $db->mysql_qw($query, $client['inn']);
+        $result = [];
+
+        if ($data->num_rows) {
+            while ($row = $data->fetch_assoc()) {
+                $row['problems'] = unserialize($row['problems']);
+                if (!is_array($row['problems'])) $row['problems'] = [];
+
+                $result[] = $row;
+            }
+        }
+        print_r($result);
+        // Flight::halt(200, json_encode($result));
+    } catch (Exception $error) {
+        sqlErrorHandler($error->getMessage());
+    }
+}
+
+
+//получить заявку по uid
+function getOrder($client, $uid)
+{
+    $column_name = [
+        'date_create',
+        'accept_start_repair',
+        // 'date_start_repair', //меняется в зависимости от значения accept_start_repair (true/false)
+
+        // 'uid', //меняется в зависимости от роли клиента (заказчик/исполнитель)
+        'order_num',
+        'garage_num',
+        'invent_num',
+        'reg_num',
+        'vin_code',
+        'car_model',
+
+        'car_type',
+        'year_issue',
+        'mileage',
+        'problems',
+        'contact',
+        'basis',
+        'comments'
+    ];
+
+
+    if ($client['is_customer'] === 'true') {
         $query = sprintf("SELECT uid, IF(accept_start_repair='true', date_start_repair, '') AS date_start_repair, %s FROM orders WHERE uid=? AND inn_customer=? LIMIT 1", implode(', ', $column_name));
     } else {
-        $uid = explode('_', $uid)[1];
+        $uid = explode('_', $uid);
+
+        if (count($uid) < 2) Flight::halt(404, 'not found');
+        else $uid = $uid[1];
+
         $query = sprintf("SELECT CONCAT(inn_customer, '_', id) AS uid, IF(accept_start_repair='true', date_start_repair, '') AS date_start_repair, %s FROM orders WHERE id=? LIMIT 1", implode(', ', $column_name));
     }
 
@@ -217,15 +315,14 @@ function getOrder($client, $uid)
         if ($data->num_rows) {
             $result = $data->fetch_assoc();
             $result['problems'] = unserialize($result['problems']);
-            if(!is_array($result['problems'])) $result['problems'] = [];
+            if (!is_array($result['problems'])) $result['problems'] = [];
 
             print_r($result);
             // Flight::halt(200, json_encode($result));
-        }
-        else {
+        } else {
             Flight::halt(404, 'not found');
         }
     } catch (Exception $error) {
-        Flight::halt(400, json_encode(["errors" => [$error->getMessage()]]));
+        sqlErrorHandler($error->getMessage());
     }
 }
