@@ -30,6 +30,7 @@ Flight::route('GET /test', function () {
 
 
 //~~~~~~~~~~~~~~~~~~~~~~~main api~~~~~~~~~~~~~~~~~~~~~~~\\
+//направление заявки на ремонт
 Flight::route('POST /api/service/order', function () {
     $client = accessControl();
     if ($client['is_customer'] === 'false') {
@@ -46,9 +47,17 @@ Flight::route('POST /api/service/order', function () {
     print_r($client);
     print_r($body);
 });
+//получить список заявок на ремонт
 Flight::route('GET /api/service/orders', function () {
     $client = accessControl();
+    getOrders($client);
     print_r($client);
+});
+//получить заявку по uid
+Flight::route('GET /api/service/order/@uid', function ($uid) {
+    $client = accessControl();
+    getOrder($client, $uid);
+    print_r($uid);
 });
 
 

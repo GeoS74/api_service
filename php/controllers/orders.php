@@ -1,5 +1,5 @@
 <?php
-require_once(__DIR__.'/../libs/checkCredentials.php');
+require_once(__DIR__ . '/../libs/checkCredentials.php');
 
 function checkCredentialsOrder($data)
 {
@@ -47,24 +47,16 @@ function checkDublicateOrder($data)
 
 function addOrder($data)
 {
-    $query = "INSERT INTO orders (
-        uid, 
-        order_num, 
-        garage_num,
-        invent_num,
-        reg_num, 
-        vin_code, 
-        car_model, 
-        car_type, 
-        year_issue,
-        mileage, 
-        problems, 
-        contact,
-        basis,
-        comments,
-        inn_customer) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-
+    //обязательные поля
+    $column_name = [
+        'uid',
+        'order_num',
+        'garage_num',
+        'invent_num',
+        'reg_num',
+        'vin_code',
+        'car_model',
+    ];
     $d = [
         $data['uid'],
         $data['order_num'],
@@ -73,22 +65,167 @@ function addOrder($data)
         $data['reg_num'],
         $data['vin_code'],
         $data['car_model'],
-        $data['car_type'],
-        $data['year_issue'],
-        $data['mileage'],
-        serialize($data['problems']),
-        $data['contact'],
-        $data['basis'],
-        $data['comments'],
-        $data['inn_customer'],
     ];
+
+    //не обязательные поля
+    if (array_key_exists('car_type', $data)) {
+        $column_name[] = 'car_type';
+        $d[] = $data['car_type'];
+    }
+    if (array_key_exists('year_issue', $data)) {
+        $column_name[] = 'year_issue';
+        $d[] = $data['year_issue'];
+    }
+    if (array_key_exists('mileage', $data)) {
+        $column_name[] = 'mileage';
+        $d[] = $data['mileage'];
+    }
+    if (array_key_exists('problems', $data)) {
+        $column_name[] = 'problems';
+        $d[] = serialize($data['problems']);
+    }
+    if (array_key_exists('contact', $data)) {
+        $column_name[] = 'contact';
+        $d[] = $data['contact'];
+    }
+    if (array_key_exists('basis', $data)) {
+        $column_name[] = 'basis';
+        $d[] = $data['basis'];
+    }
+    if (array_key_exists('comments', $data)) {
+        $column_name[] = 'comments';
+        $d[] = $data['comments'];
+    }
+
+    //добавляется приложением и не зависит от данных клиента
+    $column_name[] = 'inn_customer';
+    $d[] = $data['inn_customer'];
+
+    //sql запрос
+    $col_name = implode(', ', $column_name);
+    $placeholders = array_fill(0, count($column_name), '?');
+    $placeholders = implode(', ', $placeholders);
+    $query = sprintf("INSERT INTO orders (%s) VALUES (%s)", $col_name, $placeholders);
 
     try {
         $db = new DataBase();
         $db->mysql_qw($query, $d);
         Flight::halt(201, 'Order created');
     } catch (Exception $error) {
-        $errors = [$error->getMessage()];
-        Flight::halt(400, json_encode(["errors" => $errors]));
+        sqlErrorHandler($error->getMessage());
+    }
+}
+
+function sqlErrorHandler($message)
+{
+    $errors = [];
+
+    preg_match("/Data too long for column '([\w]+)'/", $message, $match);
+    if (count($match) == 2) {
+        $errors[] = sprintf("длина поля '%s' превышает допустимый размер", $match[1]);
+    }
+
+    Flight::halt(400, json_encode(["errors" => $errors]));
+}
+
+function getOrders($client)
+{
+    $column_name = [
+        'date_create',
+        'accept_start_repair',
+        // 'date_start_repair', //меняется в зависимости от значения accept_start_repair (true/false)
+
+        // 'uid', //меняется в зависимости от роли клиента (заказчик/исполнитель)
+        'order_num',
+        'garage_num',
+        'invent_num',
+        'reg_num',
+        'vin_code',
+        'car_model',
+
+        'car_type',
+        'year_issue',
+        'mileage',
+        'problems',
+        'contact',
+        'basis',
+        'comments'
+    ];
+
+    if ($client['is_customer'] === 'true') {
+        $query = sprintf("SELECT uid, IF(accept_start_repair='true', date_start_repair, '') AS date_start_repair, %s FROM orders WHERE inn_customer=? ORDER BY id DESC", implode(', ', $column_name));
+    } else {
+        $query = sprintf("SELECT CONCAT(inn_customer, '_', id) AS uid, IF(accept_start_repair='true', date_start_repair, '') AS date_start_repair, %s FROM orders ORDER BY id DESC", implode(', ', $column_name));
+    }
+
+    try {
+        $db = new DataBase();
+        $data = $db->mysql_qw($query, $client['inn']);
+        $result = [];
+
+        if ($data->num_rows) {
+            while ($row = $data->fetch_assoc()) {
+                $row['problems'] = unserialize($row['problems']);
+                if(!is_array($row['problems'])) $row['problems'] = [];
+
+                $result[] = $row;
+            }
+        }
+        print_r($result);
+        // Flight::halt(200, json_encode($result));
+    } catch (Exception $error) {
+        Flight::halt(400, json_encode(["errors" => [$error->getMessage()]]));
+    }
+}
+
+
+function getOrder($client, $uid)
+{
+    $column_name = [
+        'date_create',
+        'accept_start_repair',
+        // 'date_start_repair', //меняется в зависимости от значения accept_start_repair (true/false)
+
+        // 'uid', //меняется в зависимости от роли клиента (заказчик/исполнитель)
+        'order_num',
+        'garage_num',
+        'invent_num',
+        'reg_num',
+        'vin_code',
+        'car_model',
+
+        'car_type',
+        'year_issue',
+        'mileage',
+        'problems',
+        'contact',
+        'basis',
+        'comments'
+    ];
+
+    if ($client['is_customer'] === 'true') {
+        $query = sprintf("SELECT uid, IF(accept_start_repair='true', date_start_repair, '') AS date_start_repair, %s FROM orders WHERE uid=? AND inn_customer=? LIMIT 1", implode(', ', $column_name));
+    } else {
+        $uid = explode('_', $uid)[1];
+        $query = sprintf("SELECT CONCAT(inn_customer, '_', id) AS uid, IF(accept_start_repair='true', date_start_repair, '') AS date_start_repair, %s FROM orders WHERE id=? LIMIT 1", implode(', ', $column_name));
+    }
+
+    try {
+        $db = new DataBase();
+        $data = $db->mysql_qw($query, $uid, $client['inn']);
+
+        if ($data->num_rows) {
+            $result = $data->fetch_assoc();
+            $result['problems'] = unserialize($result['problems']);
+            if(!is_array($result['problems'])) $result['problems'] = [];
+
+            print_r($result);
+            // Flight::halt(200, json_encode($result));
+        }
+        else {
+            Flight::halt(404, 'not found');
+        }
+    } catch (Exception $error) {
+        Flight::halt(400, json_encode(["errors" => [$error->getMessage()]]));
     }
 }
