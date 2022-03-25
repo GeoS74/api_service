@@ -60,6 +60,15 @@
             <a class="nav-link" href="order_query">Направление заявки на ремонт</a>
         </li>
         <li class="nav-item">
+            <a class="nav-link" href="get_orders">Получение списка заявок на ремонт</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="get_order_by_uid">Получение заявки по uid</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="repair_accept">Подтверждение начала ремонта</a>
+        </li>
+        <li class="nav-item">
             <a class="nav-link" href="error_description">Описание ошибок</a>
         </li>
     </ul>
@@ -86,7 +95,7 @@
         loadData('description');
 
         function loadData(thema) {
-            fetch(`<?php echo BASE ?>/api/service/docs/${thema}`)
+            fetch(`<?php echo BASE.PREFIX ?>/docs/${thema}`)
                 .then(async response => {
                     main.innerHTML = await response.text();
                 })

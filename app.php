@@ -12,7 +12,7 @@ spl_autoload_register(function ($class) {
 
 //set default path for template files
 Flight::set('flight.views.path', './client/tpl');
-define('PREFIX', '/api/service');
+define('PREFIX', '/service');
 
 Flight::route('GET /server', function () {
     accessControl();

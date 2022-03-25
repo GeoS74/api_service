@@ -29,7 +29,7 @@
 
     <script>
         (async _ => {
-            await fetch('/gsp/tokens')
+            await fetch('<?php echo BASE ?>/tokens')
                 .then(async response => {
                     if (response.ok) {
                         const res = await response.json();
@@ -48,7 +48,7 @@
         function delToken(event) {
             if (!confirm("delete this token?")) return;
 
-            fetch(`/gsp/token/${event.target.parentNode.dataset.id}`, {
+            fetch(`<?php echo BASE ?>/token/${event.target.parentNode.dataset.id}`, {
                     method: 'DELETE'
                 })
                 .then(async response => {
@@ -66,7 +66,7 @@
             const fd = new FormData(tokenForm);
             addToken.disabled = true;
 
-            await fetch('/gsp/token', {
+            await fetch('<?php echo BASE ?>/token', {
                     method: 'POST',
                     body: fd
                 })

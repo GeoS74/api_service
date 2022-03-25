@@ -1,7 +1,7 @@
 <?php
 define('DB_CHARSET', 'utf8'); //в функции set_charset нельзя передавать кодировку с '-' (utf-8). Почитать: https://www.php.net/manual/ru/mysqlinfo.concepts.charset.php
 define('CHARSET', 'utf-8');
-define('BASE', '/gsp');
+define('BASE', '/api');
 define('DOMEN', 'https://localhost:4443');
 
 //session

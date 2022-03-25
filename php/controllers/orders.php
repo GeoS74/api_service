@@ -131,6 +131,10 @@ function updStartRepair($data)
     checkDefaultKeyString('accept_start_repair', $data, $errors);
     checkTypeValue('accept_start_repair', $data, 'string', $errors);
 
+    if($data['accept_start_repair'] !== 'true'){
+        $errors[] = 'поле accept_start_repair содержит не допустимое значение';
+    }
+
     if (count($errors)) {
         Flight::halt(400, json_encode(["errors" => $errors]));
     }
@@ -140,8 +144,11 @@ function updStartRepair($data)
     else {
         $uid = $uid[1];
         $db = new DataBase();
-        $result = $db->mysql_qw('SELECT id FROM orders WHERE id=?', $uid);
+        $result = $db->mysql_qw('SELECT id, accept_start_repair FROM orders WHERE id=?', $uid);
         if(!$result -> num_rows) Flight::halt(404, 'not found');
+        else {
+            if($result -> fetch_assoc()['accept_start_repair'] === 'true') Flight::halt(400, json_encode(["errors" => ['данные не могут быть изменены, ремонт был подтверждён ранее']]));
+        }
     }
 
     $query = sprintf("UPDATE orders SET date_start_repair=DEFAULT, accept_start_repair=? WHERE id=?");

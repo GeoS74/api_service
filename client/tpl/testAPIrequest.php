@@ -123,6 +123,9 @@
 
 
     <script>
+
+
+
         const data = {
             uid: 'dgfvi49y84um39395',
             order_num: 'C2KA-039837',
@@ -149,7 +152,7 @@
             accept_start_repair: 'true'
         };
         (async _ => {
-            await fetch('/gsp/api/service/orders?only_new=false', {
+            await fetch('<?php echo BASE ?>/api/service/orders?only_new=true', {
             // await fetch('/gsp/api/service/order/dgfvi49y84um19395', {
             // await fetch('/gsp/api/service/order/7810443290_15', {
             // await fetch('/gsp/api/service/order/7810443290_10', {
@@ -161,7 +164,7 @@
                         'Content-Type': 'application/json',
                         // 'Connection': 'keep-alive',
                         // 'Origin': 'weed.ru'
-                        'Authorization': 'Basic c18425c8bcc80255d2b8a55609f4e7701c301aeacdf7f4527a'
+                        'Authorization': 'Basic 640aec714b14bb856621c593ca8cd88a873763e06dc655dfa2'
                     },
                     method: 'GET',
                     // body: JSON.stringify(data)
@@ -169,7 +172,7 @@
                 })
                 .then(async response => {
                     if(response.ok){
-                        console.log(await response.text());
+                        console.log(await response.json());
                     }
                     else if(response.status == 400) {
                         console.log(JSON.parse(await response.text()));
