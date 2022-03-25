@@ -124,35 +124,35 @@
 
     <script>
         const data = {
-            uid: 'dgfvi49y84um19395',
+            uid: 'dgfvi49y84um39395',
             order_num: 'C2KA-039837',
             garage_num: '115853',
             invent_num: '11527',
             reg_num: 'O931BK199',
             vin_code: 'X980980N3AABS5078',
             // car_model: 'УРАЛ 4320 с БАКМ 0980N',
-            car_model: 'Ferrari',
+            car_model: '         gaz              ',
 
             car_type: 'Бортовой автомобиль с КМУ',
-            // year_issue: '2008',
-            // mileage: '21 968',
-            // problems: [
-            //     "плановое ТО",    
-            //     "нестабильные обороты на холостых",   
-            // ],
-            // contact: 'Иванов Иван Иванович',
-            // basis: 'г. Новый Уренгой',
-            // comments: 'Здесь может быть какой-нибудь комментарий',
+            year_issue: '2008',
+            mileage: '21 968',
+            problems: [
+                "плановое ТО",    
+                "нестабильные обороты на холостых",   
+            ],
+            contact: 'Иванов Иван Иванович',
+            basis: 'г. Новый Уренгой',
+            comments: 'Здесь может быть какой-нибудь комментарий',
         };
 
         const upd = {
             accept_start_repair: 'true'
         };
         (async _ => {
-            // await fetch('/gsp/api/service/orders', {
+            await fetch('/gsp/api/service/orders?only_new=false', {
             // await fetch('/gsp/api/service/order/dgfvi49y84um19395', {
+            // await fetch('/gsp/api/service/order/7810443290_15', {
             // await fetch('/gsp/api/service/order/7810443290_10', {
-            await fetch('/gsp/api/service/order/7810443290_10', {
                     // mode: 'cors',
                     // cache: 'no-cache',
                     headers: {
@@ -161,11 +161,11 @@
                         'Content-Type': 'application/json',
                         // 'Connection': 'keep-alive',
                         // 'Origin': 'weed.ru'
-                        'Authorization': 'Basic 640aec714b14bb856621c593ca8cd88a873763e06dc655dfa2'
+                        'Authorization': 'Basic c18425c8bcc80255d2b8a55609f4e7701c301aeacdf7f4527a'
                     },
-                    method: 'POST',
+                    method: 'GET',
                     // body: JSON.stringify(data)
-                    body: JSON.stringify(upd)
+                    // body: JSON.stringify(upd)
                 })
                 .then(async response => {
                     if(response.ok){

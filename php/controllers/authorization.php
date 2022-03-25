@@ -2,7 +2,7 @@
 function accessControl() {
     checkRequestScheme();
     checkHeaderAuth('Authorization');
-    return checkToken( getToken() );
+    checkToken( getToken() );
 }
 
 function checkRequestScheme() {
@@ -38,10 +38,11 @@ function checkToken($token) {
     else {
         $token_data = $result -> fetch_assoc();
         checkCountVisit($token_data);
-        return [
+        $client = [
             'inn' => $token_data['inn'],
             'is_customer' => $token_data['is_customer'],
         ];
+        Flight::set('client', $client);
     }
 }
 

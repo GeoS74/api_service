@@ -12,6 +12,7 @@ spl_autoload_register(function ($class) {
 
 //set default path for template files
 Flight::set('flight.views.path', './client/tpl');
+define('PREFIX', '/api/service');
 
 Flight::route('GET /server', function () {
     accessControl();
@@ -20,72 +21,57 @@ Flight::route('GET /server', function () {
 
 
 
+ 
 
-Flight::route('GET /test', function () {
-    Flight::render('testAPIrequest');
-});
-// Flight::route('POST /rest', function () {
-//     echo Flight::request() -> data -> name;
-// });
 
 
 //~~~~~~~~~~~~~~~~~~~~~~~main api~~~~~~~~~~~~~~~~~~~~~~~\\
 //направление заявки на ремонт
-Flight::route('POST /api/service/order', function () {
-    $client = accessControl();
-    if ($client['is_customer'] === 'false') {
+Flight::route('POST '.PREFIX.'/order', function () {
+    accessControl();
+    if (Flight::get('client')['is_customer'] === 'false') {
         Flight::halt(403, 'Forbidden');
     }
 
     $body = (array)json_decode(Flight::request()->getBody());
-    $body['inn_customer'] = $client['inn'];
+    $body['inn_customer'] = Flight::get('client')['inn'];
 
     checkCredentialsOrder($body);
     checkDublicateOrder($body);
     addOrder($body);
-
-    print_r($client);
-    print_r($body);
 });
 //получить список заявок на ремонт
-Flight::route('GET /api/service/orders', function () {
-    $client = accessControl();
-    getOrders($client);
-    print_r($client);
-});
-//получить список не подтвержденных заявок на ремонт
-Flight::route('GET /api/service/orders/new', function () {
-    $client = accessControl();
-    getOrdersNew($client);
-    print_r($client);
+Flight::route('GET '.PREFIX.'/orders', function () {
+    accessControl();
+    if (Flight::request()->query['only_new'] === 'true') {
+        Flight::set('only_new', true);
+    }
+    getOrders();
 });
 //получить заявку по uid
-Flight::route('GET /api/service/order/@uid', function ($uid) {
-    $client = accessControl();
-    getOrder($client, $uid);
-    print_r($client);
+Flight::route('GET '.PREFIX.'/order/@uid', function ($uid) {
+    accessControl();
+    Flight::set('uid', $uid);
+    getOrder();
 });
 //подтверждение начала ремонта
-Flight::route('POST /api/service/order/@uid', function ($uid) {
-    $client = accessControl();
-    if ($client['is_customer'] === 'true') {
+Flight::route('POST '.PREFIX.'/order/@uid', function ($uid) {
+    accessControl();
+    if (Flight::get('client')['is_customer'] === 'true') {
         Flight::halt(403, 'Forbidden');
     }
 
-    
+    Flight::set('uid', $uid);
     $body = (array)json_decode(Flight::request()->getBody());
 
-    updStartRepair($body, $uid);
-
-    print_r($client);
-    print_r($body);
+    updStartRepair($body);
 });
 
 
 
 
 //~~~~~~~~~~~~~~~~~~~~~~~docs api~~~~~~~~~~~~~~~~~~~~~~~\\
-Flight::route('GET /api/service/docs(/@page)', function ($page) {
+Flight::route('GET '.PREFIX.'/docs(/@page)', function ($page) {
     if (!$page) $page = 'main';
     Flight::render('./docs/' . $page);
 });
@@ -233,5 +219,13 @@ Flight::route('GET /create/table/orders', function () {
 Flight::map('notFound', function () {
     Flight::halt(404, 'not found');
 });
+
+
+
+//~~~~~~~~~~~~~~~~~~~~~~~test~~~~~~~~~~~~~~~~~~~~~~~\\
+Flight::route('GET /test', function () {
+    Flight::render('testAPIrequest');
+});
+
 
 Flight::start();
