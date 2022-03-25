@@ -1,4 +1,6 @@
 <?php
+// require_once 'vendor/mikecao/flight/flight/autoload.php';
+// require_once 'vendor/mikecao/flight/flight/Flight.php';
 require_once 'vendor/autoload.php';
 require_once 'php/controllers/authorization.php';
 require_once 'php/controllers/orders.php';
@@ -15,7 +17,7 @@ Flight::set('flight.views.path', './client/tpl');
 define('PREFIX', '/service');
 
 Flight::route('GET /server', function () {
-    accessControl();
+    // accessControl();
     Flight::render('server');
 });
 
@@ -116,7 +118,7 @@ Flight::route('POST /token', function () {
             Flight::request()->data->organization,
             Flight::request()->data->contacts,
             $token,
-            Flight::request()->data->is_customer ? 'true' : 'false',
+            Flight::request()->data->is_customer ? 'true' : 'false'
         );
         echo json_encode([
             "id" => $db->get_last_id(),
@@ -229,3 +231,4 @@ Flight::route('GET /test', function () {
 
 
 Flight::start();
+?>
