@@ -17,7 +17,7 @@ Flight::set('flight.views.path', './client/tpl');
 define('PREFIX', '/service');
 
 Flight::route('GET /server', function () {
-    // accessControl();
+    accessControl();
     Flight::render('server');
 });
 
