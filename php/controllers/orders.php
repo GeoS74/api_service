@@ -115,6 +115,16 @@ function addOrder($data)
     try {
         $db = new DataBase();
         $db->mysql_qw($query, $d);
+
+        $mail = new Mail;
+        $mail
+            ->setTo('gsirotkin@bovid.ru') //установка адресатов заказчика
+            ->setFrom("noreply@bovid.ru")
+            ->setSubject("Поступила заявка на ремонт")
+            ->setMessage("Автомобиль: " . $data['car_model'] . "\r\n\r\n")
+            ->setMessage("Это письмо сформировано автоматически. Отвечать на него не нужно.")
+            ->send();
+
         Flight::halt(201, 'Order created');
     } catch (Exception $error) {
         sqlErrorHandler($error->getMessage());
@@ -131,23 +141,23 @@ function updStartRepair($data)
     checkDefaultKeyString('accept_start_repair', $data, $errors);
     checkTypeValue('accept_start_repair', $data, 'string', $errors);
 
-    if($data['accept_start_repair'] !== 'true'){
+    if ($data['accept_start_repair'] !== 'true') {
         $errors[] = 'поле accept_start_repair содержит не допустимое значение';
     }
 
     if (count($errors)) {
         Flight::halt(400, json_encode(["errors" => $errors]));
     }
-    
+
     $uid = explode('_', $uid);
     if (count($uid) < 2) Flight::halt(404, 'not found');
     else {
         $uid = $uid[1];
         $db = new DataBase();
         $result = $db->mysql_qw('SELECT id, accept_start_repair FROM orders WHERE id=?', $uid);
-        if(!$result -> num_rows) Flight::halt(404, 'not found');
+        if (!$result->num_rows) Flight::halt(404, 'not found');
         else {
-            if($result -> fetch_assoc()['accept_start_repair'] === 'true') Flight::halt(400, json_encode(["errors" => ['данные не могут быть изменены, ремонт был подтверждён ранее']]));
+            if ($result->fetch_assoc()['accept_start_repair'] === 'true') Flight::halt(400, json_encode(["errors" => ['данные не могут быть изменены, ремонт был подтверждён ранее']]));
         }
     }
 
@@ -176,7 +186,7 @@ function sqlErrorHandler($message)
         $errors[] = sprintf("поле '%s' содержит не допустимое значение", $match[1]);
     }
 
-    if(!count($errors)) $errors[] = $message;
+    if (!count($errors)) $errors[] = $message;
 
     Flight::halt(400, json_encode(["errors" => $errors]));
 }
@@ -272,7 +282,7 @@ function getOrder()
             $uid = $uid[1];
             $db = new DataBase();
             $result = $db->mysql_qw('SELECT id FROM orders WHERE id=?', $uid);
-            if(!$result -> num_rows) Flight::halt(404, 'not found');
+            if (!$result->num_rows) Flight::halt(404, 'not found');
         }
 
         $query = sprintf("SELECT CONCAT(inn_customer, '_', id) AS uid, IF(accept_start_repair='true', date_start_repair, '') AS date_start_repair, %s FROM orders WHERE id=? LIMIT 1", implode(', ', $column_name));
