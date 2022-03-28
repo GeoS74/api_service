@@ -120,7 +120,7 @@ function addOrder($data)
         $mail
             ->setTo('gsirotkin@bovid.ru') //установка адресатов заказчика
             ->setFrom("noreply@bovid.ru")
-            ->setSubject("Поступила заявка на ремонт")
+            ->setSubject("API SERVICE: Поступила заявка на ремонт")
             ->setMessage("Автомобиль: " . $data['car_model'] . "\r\n\r\n")
             ->setMessage("Это письмо сформировано автоматически. Отвечать на него не нужно.")
             ->send();
