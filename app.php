@@ -23,10 +23,6 @@ Flight::route('GET /server', function () {
 
 
 
-
-
-
-
 //~~~~~~~~~~~~~~~~~~~~~~~main api~~~~~~~~~~~~~~~~~~~~~~~\\
 //направление заявки на ремонт
 Flight::route('POST '.PREFIX.'/order', function () {
@@ -230,4 +226,3 @@ Flight::route('GET /test', function () {
 
 
 Flight::start();
-?>

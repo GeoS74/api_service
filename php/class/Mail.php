@@ -18,7 +18,7 @@ class Mail
 	    implode(', ', $this -> to),
 	    $this -> subject,
 	    $this -> message,
-		"From: ".$this -> from
+		"From: ".$this -> from."\r\nContent-type: text/html; charset=utf-8\r\n"."X-Mailer: PHP mail script"
 	  );
 	return $this;
   }
